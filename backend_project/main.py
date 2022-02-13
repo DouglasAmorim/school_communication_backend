@@ -17,6 +17,16 @@ class OperatorDb():
 
         return result
 
+    def getPaisByUsername(username):
+        conn = db_connect.connect()
+        query = conn.execute("select * from Pais")
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        for i in result:
+            if username == i['Username']:
+                return i
+        pass
+
     def getPaisByName(name):
         conn = db_connect.connect()
         query = conn.execute("select * from Pais")
@@ -27,6 +37,16 @@ class OperatorDb():
                 return i
         pass
 
+    def getProfessorByUsername(username):
+        conn = db_connect.connect()
+        query = conn.execute("select * from Professores")
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        for i in result:
+            if username == i['Username']:
+                return i
+        pass
+
     def getProfessorByName(name):
         conn = db_connect.connect()
         query = conn.execute("select * from Professores")
@@ -34,6 +54,16 @@ class OperatorDb():
 
         for i in result:
             if name == i['Nome']:
+                return i
+        pass
+
+    def getAlunoByUsername(username):
+        conn = db_connect.connect()
+        query = conn.execute("select * from Alunos")
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        for i in result:
+            if username == i['Username']:
                 return i
         pass
 
@@ -70,6 +100,33 @@ class QueuePais(Resource):
         return jsonify(result)
 
 
+class StudentLogin(Resource):
+    def post(self, user, password):
+        aluno = OperatorDb.getAlunoByUsername(user)
+        print(aluno)
+        if aluno != None:
+            if password == aluno['Senha']:
+                print('Senha correta')
+                return aluno
+
+class TeacherLogin(Resource):
+    def post(self, user, password):
+        professor = OperatorDb.getProfessorByUsername(user)
+        print(professor)
+        if professor != None:
+            if password == professor['Senha']:
+                return professor
+
+class ParentsLogin(Resource):
+    def post(self, user, password):
+        pais = OperatorDb.getPaisByUsername(user)
+
+        print(pais)
+
+        if pais != None:
+            if password == pais['Senha']:
+                return pais
+
 class Login(Resource):
     def post(self, user, password):
         aluno = OperatorDb.getAlunoByName(user)
@@ -90,9 +147,6 @@ class Login(Resource):
         elif pais != None:
             if password == pais['Senha']:
                 return pais
-
-
-
 
 class Logout(Resource):
     def post(self):
@@ -201,8 +255,10 @@ class AlunosContactById(Resource):
 
 
 # LOGIN/LOGOUT ENDPOINTS
-api.add_resource(Login, '/login/<user>/<password>')
-api.add_resource(Logout, '/logout')
+#api.add_resource(Login, '/login/<user>/<password>')
+api.add_resource(StudentLogin, '/login/students/<user>/<password>')
+api.add_resource(ParentsLogin, '/login/parents/<user>/<password>')
+api.add_resource(TeacherLogin, '/login/teacher/<user>/<password>')
 
 api.add_resource(QueueAlunos, '/alunos/queue/<id>')
 api.add_resource(QueuePais, '/pais/queue/<id>')
