@@ -193,7 +193,9 @@ class ProfessoresContactsPais(Resource):
 
             result[0]['Senha'] = ''
 
-            finalResult.append(result)
+            if result[0] not in finalResult:
+                finalResult.append(result[0])
+            
 
         return jsonify(finalResult)
 
