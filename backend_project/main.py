@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from sqlalchemy import create_engine
@@ -266,11 +268,9 @@ class AlunosContactById(Resource):
 
         return jsonify(result)
 
-class SendMessageToAluno(Resource):
-    def post(self, remetenteNome, destinatarioQueueId, message):
-
-        print('init send message')
-
+class ProfessorSendMessageToAluno(Resource):
+    def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
+        # SELECT queue aluno from DB
         conn = db_connect.connect()
         query = conn.execute("select * from QueueAluno where QueueId = %d" % int(destinatarioQueueId))
 
@@ -278,7 +278,9 @@ class SendMessageToAluno(Resource):
 
         queueName = result[0]['Nome']
 
-        newMessage = '{Remetente:' + remetenteNome + 'Mensagem:' + message + '}'
+        newMessage = '{Remetente:' + remetenteNome + ', Mensagem:' + message + '}'
+
+        # RabbitMQ
 
         credentials = pika.PlainCredentials('admin', 'D!o@4701298')
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost',
@@ -295,8 +297,130 @@ class SendMessageToAluno(Resource):
 
         connection.close()
 
+        # Insert Message on DB
+
+        ## VALUES(AlunoId, SchoolId, ProfessorId, Mensagem, Data)
+        conn.execute("INSERT INTO CaixaEntradaAlunos VALUES(\'%d\', 0, \'%d\', \'%s\', datetime('now'))" % (int(destinatarioId), int(remetenteId), message))
+
+        ## teste para chegar inclusão
+        query = conn.execute("select * from CaixaEntradaAlunos")
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+        print(result)
+
         return "success"
 
+class ProfessorSendMessageToPais(Resource):
+    def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
+        # SELECT queue aluno from DB
+        conn = db_connect.connect()
+        query = conn.execute("select * from QueuePais where QueueId = %d" % int(destinatarioQueueId))
+
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        queueName = result[0]['Nome']
+
+        newMessage = '{Remetente:' + remetenteNome + ', Mensagem:' + message + '}'
+
+        # RabbitMQ
+
+        credentials = pika.PlainCredentials('admin', 'D!o@4701298')
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost',
+                                                                       5672,
+                                                                       '/',
+                                                                       credentials))
+        channel = connection.channel()
+
+        channel.queue_declare(queueName,False,True,False,False,None)
+
+        channel.basic_publish(exchange= '',
+                              routing_key=queueName,
+                              body=newMessage)
+
+        connection.close()
+
+        # Insert Message on DB
+
+        ## VALUES(AlunoId, SchoolId, ProfessorId, Mensagem, Data)
+        conn.execute("INSERT INTO CaixaEntradaPais VALUES(\'%d\', \'%d\',  0, 0,  \'%s\', datetime('now'))" % (int(destinatarioId), int(remetenteId), message))
+
+        ## teste para chegar inclusão
+        query = conn.execute("select * from CaixaEntradaPais")
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+        print(result)
+
+        return "success"
+
+
+class AlunosSendMessageToProfessores(Resource):
+    def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
+        # SELECT queue aluno from DB
+        conn = db_connect.connect()
+        query = conn.execute("select * from QueueProfessor where QueueId = %d" % int(destinatarioQueueId))
+
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        queueName = result[0]['Nome']
+
+        newMessage = '{Remetente:' + remetenteNome + ', Mensagem:' + message + '}'
+
+        # RabbitMQ
+
+        credentials = pika.PlainCredentials('admin', 'D!o@4701298')
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost',
+                                                                       5672,
+                                                                       '/',
+                                                                       credentials))
+        channel = connection.channel()
+
+        channel.queue_declare(queueName, False, True, False, False, None)
+
+        channel.basic_publish(exchange='',
+                              routing_key=queueName,
+                              body=newMessage)
+
+        connection.close()
+
+        # Insert Message on DB
+
+        ## VALUES(ProfessorId, SchoolId, PaisId, AlunosId, Mensagem, Data)
+        conn.execute("INSERT INTO CaixaEntradaProfessores VALUES(\'%d\', 0, 0, \'%d\', \'%s\', datetime('now'))" % (int(destinatarioId), int(remetenteId), message))
+
+        return "success"
+
+class PaisSendMessageToProfessores(Resource):
+    def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
+        # SELECT queue aluno from DB
+        conn = db_connect.connect()
+        query = conn.execute("select * from QueueProfessor where QueueId = %d" % int(destinatarioQueueId))
+
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        queueName = result[0]['Nome']
+
+        newMessage = '{Remetente:' + remetenteNome + ', Mensagem:' + message + '}'
+
+        # RabbitMQ
+
+        credentials = pika.PlainCredentials('admin', 'D!o@4701298')
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost',
+                                                                       5672,
+                                                                       '/',
+                                                                       credentials))
+        channel = connection.channel()
+
+        channel.queue_declare(queueName, False, True, False, False, None)
+
+        channel.basic_publish(exchange='',
+                              routing_key=queueName,
+                              body=newMessage)
+
+        connection.close()
+
+        # Insert Message on DB
+        ## VALUES(ProfessorId, SchoolId, PaisId, AlunosId, Mensagem, Data)
+        conn.execute("INSERT INTO CaixaEntradaProfessores VALUES(\'%d\', 0, \'%d\', 0, \'%s\', datetime('now'))" % (int(destinatarioId), int(remetenteId), message))
+
+        return "success"
 
 # LOGIN/LOGOUT
 api.add_resource(StudentLogin, '/login/students/<user>/<password>')
@@ -314,7 +438,10 @@ api.add_resource(PaisContactsById, '/pais/<id>/contacts')
 api.add_resource(ProfessoresContactsById, '/professores/<id>/contacts/alunos')
 api.add_resource(ProfessoresContactsPais, '/professores/<id>/contacts/pais')
 
-api.add_resource(SendMessageToAluno, '/professor/send/<remetenteNome>/<destinatarioQueueId>/<message>')
+api.add_resource(ProfessorSendMessageToAluno, '/professor/send/alunos/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
+api.add_resource(ProfessorSendMessageToPais, '/professor/send/pais/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
+api.add_resource(AlunosSendMessageToProfessores, '/alunos/send/professores/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
+api.add_resource(PaisSendMessageToProfessores, '/pais/send/professores/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
