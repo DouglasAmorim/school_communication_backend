@@ -422,6 +422,34 @@ class PaisSendMessageToProfessores(Resource):
 
         return "success"
 
+class AlunosGetMessages(Resource):
+    def get(self, alunoId):
+        conn = db_connect.connect()
+        query = conn.execute("select * from CaixaEntradaAlunos where AlunoId = %d" % int(alunoId))
+
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        return result
+
+
+class ProfessoresGetMessages(Resource):
+    def get(self, professoresId):
+        conn = db_connect.connect()
+        query = conn.execute("select * from CaixaEntradaProfessores where ProfessoresId = %d" % int(professoresId))
+
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        return result
+
+class PaisGetMessages(Resource):
+    def get(self, paisId):
+        conn = db_connect.connect()
+        query = conn.execute("select * from CaixaEntradaPais where PaisId = %d" % int(paisId))
+
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        return result
+
 # LOGIN/LOGOUT
 api.add_resource(StudentLogin, '/login/students/<user>/<password>')
 api.add_resource(ParentsLogin, '/login/parents/<user>/<password>')
@@ -438,10 +466,16 @@ api.add_resource(PaisContactsById, '/pais/<id>/contacts')
 api.add_resource(ProfessoresContactsById, '/professores/<id>/contacts/alunos')
 api.add_resource(ProfessoresContactsPais, '/professores/<id>/contacts/pais')
 
+## Endpoints Send Messages
 api.add_resource(ProfessorSendMessageToAluno, '/professor/send/alunos/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
 api.add_resource(ProfessorSendMessageToPais, '/professor/send/pais/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
 api.add_resource(AlunosSendMessageToProfessores, '/alunos/send/professores/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
 api.add_resource(PaisSendMessageToProfessores, '/pais/send/professores/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
+
+## Endpoints Get Messages
+api.add_resource(AlunosGetMessages, '/alunos/messages')
+api.add_resource(ProfessoresGetMessages, '/professor/messages')
+api.add_resource(PaisGetMessages, '/pais/messages')
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
