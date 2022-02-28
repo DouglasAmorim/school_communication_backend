@@ -195,7 +195,7 @@ class ProfessoresContactsPais(Resource):
 
             if result[0] not in finalResult:
                 finalResult.append(result[0])
-            
+
 
         return jsonify(finalResult)
 
@@ -230,9 +230,19 @@ class PaisContactsById(Resource):
 
         result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
 
-        result[0]['Senha'] = ''
+        finalResult = []
 
-        return jsonify(result)
+        for value in result:
+            professorId = value['ProfessoresId']
+            query = conn.execute("select * from Professores where ProfessoresId = %d" % int(professorId))
+
+            result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+            result[0]['Senha'] = ''
+
+            finalResult.append(result[0])
+
+        return jsonify(finalResult)
 
 class AlunosContactById(Resource):
     def get(self, id):
