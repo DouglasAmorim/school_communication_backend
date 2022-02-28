@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from sqlalchemy import create_engine
+import pika
 from json import dumps
 
 
@@ -265,9 +266,39 @@ class AlunosContactById(Resource):
 
         return jsonify(result)
 
+class SendMessageToAluno(Resource):
+    def post(self, remetenteNome, destinatarioQueueId, message):
 
-# LOGIN/LOGOUT ENDPOINTS
-#api.add_resource(Login, '/login/<user>/<password>')
+        print('init send message')
+
+        conn = db_connect.connect()
+        query = conn.execute("select * from QueueAluno where QueueId = %d" % int(destinatarioQueueId))
+
+        result = [dict(zip(tuple(query.keys()), i)) for i in query.cursor]
+
+        queueName = result[0]['Nome']
+
+        newMessage = '{Remetente:' + remetenteNome + 'Mensagem:' + message + '}'
+
+        credentials = pika.PlainCredentials('admin', 'D!o@4701298')
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost',
+                                                                       5672,
+                                                                       '/',
+                                                                       credentials))
+        channel = connection.channel()
+
+        channel.queue_declare(queueName,False,True,False,False,None)
+
+        channel.basic_publish(exchange= '',
+                              routing_key=queueName,
+                              body=newMessage)
+
+        connection.close()
+
+        return "success"
+
+
+# LOGIN/LOGOUT
 api.add_resource(StudentLogin, '/login/students/<user>/<password>')
 api.add_resource(ParentsLogin, '/login/parents/<user>/<password>')
 api.add_resource(TeacherLogin, '/login/teacher/<user>/<password>')
@@ -282,6 +313,8 @@ api.add_resource(AlunosContactById, '/alunos/<id>/contacts')
 api.add_resource(PaisContactsById, '/pais/<id>/contacts')
 api.add_resource(ProfessoresContactsById, '/professores/<id>/contacts/alunos')
 api.add_resource(ProfessoresContactsPais, '/professores/<id>/contacts/pais')
+
+api.add_resource(SendMessageToAluno, '/professor/send/<remetenteNome>/<destinatarioQueueId>/<message>')
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
