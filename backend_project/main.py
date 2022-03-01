@@ -852,24 +852,24 @@ api.add_resource(PaisSendMessageToProfessores, '/pais/send/professores/<remetent
 api.add_resource(PaisSendMessageToEscola, '/pais/send/escola/<remetenteNome>/<destinatarioId>/<remetenteId>/<destinatarioQueueId>/<message>')
 
 ## Endpoints Get Messages
-api.add_resource(AlunosGetMessages, '/alunos/messages/received')
-api.add_resource(ProfessoresGetMessages, '/professor/messages/received')
-api.add_resource(PaisGetMessages, '/pais/messages/received')
-api.add_resource(EscolaGetMessages, '/escola/messages/received')
+api.add_resource(AlunosGetMessages, '/alunos/messages/received/<alunoId>')
+api.add_resource(ProfessoresGetMessages, '/professor/messages/received/<professoresId>')
+api.add_resource(PaisGetMessages, '/pais/messages/received/<paisId>')
+api.add_resource(EscolaGetMessages, '/escola/messages/received/<schoolId>')
 
-api.add_resource(AlunosGetSendMessages, '/alunos/messages/send/professores')
-api.add_resource(AlunosGetSendMessagesEscola, '/alunos/messages/send/escola')
+api.add_resource(AlunosGetSendMessages, '/alunos/messages/send/professores/<alunosId>')
+api.add_resource(AlunosGetSendMessagesEscola, '/alunos/messages/send/escola/<alunosId>')
 
-api.add_resource(ProfessoresGetSendMessagesAlunos, '/professor/messages/send/alunos')
-api.add_resource(ProfessoresGetSendMessagesPais, '/professor/messages/send/pais')
-api.add_resource(ProfessoresGetSendMessagesEscola, '/professor/messages/send/escola')
+api.add_resource(ProfessoresGetSendMessagesAlunos, '/professor/messages/send/alunos/<professoresId>')
+api.add_resource(ProfessoresGetSendMessagesPais, '/professor/messages/send/pais/<professoresId>')
+api.add_resource(ProfessoresGetSendMessagesEscola, '/professor/messages/send/escola/<professoresId>')
 
-api.add_resource(PaisGetSendMessagesEscola, '/pais/messages/send/escola')
-api.add_resource(PaisGetSendMessagesProfessores, '/pais/messages/send/professores')
+api.add_resource(PaisGetSendMessagesEscola, '/pais/messages/send/escola/<paisId>')
+api.add_resource(PaisGetSendMessagesProfessores, '/pais/messages/send/professores/<paisId>')
 
-api.add_resource(EscolaGetSendMessagesAlunos, '/escola/messages/send/alunos')
-api.add_resource(EscolaGetSendMessagesPais, '/escola/messages/send/pais')
-api.add_resource(EscolaGetSendMessagesProfessores, '/escola/messages/send/professores')
+api.add_resource(EscolaGetSendMessagesAlunos, '/escola/messages/send/alunos/<schoolId>')
+api.add_resource(EscolaGetSendMessagesPais, '/escola/messages/send/pais/<schoolId>')
+api.add_resource(EscolaGetSendMessagesProfessores, '/escola/messages/send/professores/<schoolId>')
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
