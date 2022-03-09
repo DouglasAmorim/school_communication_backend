@@ -131,9 +131,13 @@ class StudentLogin(Resource):
             isPassCorrect = check_password_hash(aluno['Senha'], password)
             if isPassCorrect:
                 refresh = create_refresh_token(identity= aluno['AlunosId'])
-                create_access_token(identity= aluno['AlunosId'])
+                access =  create_access_token(identity= aluno['AlunosId'])
 
-                return aluno
+                return jsonify({
+                    'aluno':aluno,
+                    'access': access,
+                    'refresh':refresh
+                })
 
 class SchoolLogin(Resource):
     def post(self, user, password):
@@ -141,7 +145,15 @@ class SchoolLogin(Resource):
         if escola != None:
             isPassCorrect = check_password_hash(escola['Senha'], password)
             if isPassCorrect:
-                return escola
+
+                refresh = create_refresh_token(identity=escola['SchoolId'])
+                access = create_access_token(identity=escola['SchoolId'])
+
+                return jsonify({
+                    'escola': escola,
+                    'access': access,
+                    'refresh': refresh
+                })
 
 class TeacherLogin(Resource):
     def post(self, user, password):
@@ -149,7 +161,14 @@ class TeacherLogin(Resource):
         if professor != None:
             isPassCorrect = check_password_hash(professor['Senha'], password)
             if isPassCorrect:
-                return professor
+                refresh = create_refresh_token(identity=professor['ProfessoresId'])
+                access = create_access_token(identity=professor['ProfessoresId'])
+
+                return jsonify({
+                    'professor': professor,
+                    'access': access,
+                    'refresh': refresh
+                })
 
 class ParentsLogin(Resource):
     def post(self, user, password):
@@ -158,7 +177,14 @@ class ParentsLogin(Resource):
         if pais != None:
             isPassCorrect = check_password_hash(pais['Senha'], password)
             if isPassCorrect:
-                return pais
+                refresh = create_refresh_token(identity=pais['PaisId'])
+                access = create_access_token(identity=pais['PaisId'])
+
+                return jsonify({
+                    'aluno': pais,
+                    'access': access,
+                    'refresh': refresh
+                })
 
 class Logout(Resource):
     @jwt_required()
