@@ -5,11 +5,17 @@ from flask_restful import Resource, Api
 from sqlalchemy import create_engine
 import pika
 from json import dumps
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, JWTManager
+
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db_connect = create_engine('sqlite:///db_scholl_app.sqlite')
 app = Flask(__name__)
+#TODO: REFACTOR THIS SECRET KEY#
+app.config.from_mapping(
+    JWT_SECRET_KEY = 'JWT_SECRET_KEY'
+)
+JWTManager(app)
 api = Api(app)
 
 
@@ -92,6 +98,7 @@ class OperatorDb():
         pass
 
 class QueueAlunos(Resource):
+    @jwt_required()
     def get(self, id):
         conn = db_connect.connect()
         query = conn.execute("select * from QueueAluno where QueueID = %d" % int(id))
@@ -99,6 +106,7 @@ class QueueAlunos(Resource):
         return jsonify(result)
 
 class QueueProfessor(Resource):
+    @jwt_required()
     def get(self, id):
         conn = db_connect.connect()
         query = conn.execute("select * from QueueProfessor where QueueID = %d" % int(id))
@@ -107,6 +115,7 @@ class QueueProfessor(Resource):
 
 
 class QueuePais(Resource):
+    @jwt_required()
     def get(self, id):
         conn = db_connect.connect()
         query = conn.execute("select * from QueuePais where QueueID = %d" % int(id))
@@ -121,8 +130,8 @@ class StudentLogin(Resource):
         if aluno != None:
             isPassCorrect = check_password_hash(aluno['Senha'], password)
             if isPassCorrect:
-                #refresh = create_refresh_token(identity= aluno['AlunosId'])
-                #create_access_token(identity= aluno['AlunosId'])
+                refresh = create_refresh_token(identity= aluno['AlunosId'])
+                create_access_token(identity= aluno['AlunosId'])
 
                 return aluno
 
@@ -152,6 +161,7 @@ class ParentsLogin(Resource):
                 return pais
 
 class Logout(Resource):
+    @jwt_required()
     def post(self):
         self.isAuthenticated= False
         object = {'IsAuthenticated': 'False'}
@@ -159,6 +169,7 @@ class Logout(Resource):
         return [dict(zip(tuple(object.keys()), i)) for i in object]
 
 class Alunos(Resource):
+    @jwt_required()
     def get(self):
         conn = db_connect.connect()
         query = conn.execute("select * from Alunos")
@@ -166,6 +177,7 @@ class Alunos(Resource):
         return jsonify(result)
 
 class AlunoById(Resource):
+    @jwt_required()
     def get(self, id):
         return jsonify(OperatorDb.getAlunoById(self, id))
 
@@ -175,6 +187,7 @@ class AlunoById(Resource):
         # return jsonify(result)
 
 class ProfessoresContactsPais(Resource):
+    @jwt_required()
     def get(self, id):
 
         conn = db_connect.connect()
@@ -203,6 +216,7 @@ class ProfessoresContactsPais(Resource):
         return jsonify(finalResult)
 
 class ContactsEscola(Resource):
+    @jwt_required()
     def get(self):
 
         conn = db_connect.connect()
@@ -212,6 +226,7 @@ class ContactsEscola(Resource):
         return jsonify(result)
 
 class ProfessoresContactsById(Resource):
+    @jwt_required()
     def get(self, id):
         conn = db_connect.connect()
         query = conn.execute("select * from Turma_has_Professores where ProfessoresId = %d" % int(id))
@@ -226,6 +241,7 @@ class ProfessoresContactsById(Resource):
         return jsonify(result)
 
 class PaisContactsById(Resource):
+    @jwt_required()
     def get(self, id):
         conn = db_connect.connect()
         query = conn.execute("select * from Pais where PaisId = %d" % int(id))
@@ -257,6 +273,7 @@ class PaisContactsById(Resource):
         return jsonify(finalResult)
 
 class AlunosContactById(Resource):
+    @jwt_required()
     def get(self, id):
         conn = db_connect.connect()
         query = conn.execute("select * from Alunos where AlunosId = %d" % int(id))
@@ -278,6 +295,7 @@ class AlunosContactById(Resource):
         return jsonify(result)
 
 class EscolaSendMessageToAluno(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -312,6 +330,7 @@ class EscolaSendMessageToAluno(Resource):
 
 
 class EscolaSendMessageToProfessores(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -345,6 +364,7 @@ class EscolaSendMessageToProfessores(Resource):
         return "success"
 
 class EscolaSendMessageToPais(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -378,6 +398,7 @@ class EscolaSendMessageToPais(Resource):
         return "success"
 
 class EscolaSendMessageToAluno(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -412,6 +433,7 @@ class EscolaSendMessageToAluno(Resource):
         return "success"
 
 class ProfessorSendMessageToAluno(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -453,6 +475,7 @@ class ProfessorSendMessageToAluno(Resource):
         return "success"
 
 class ProfessorSendMessageToEscola(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -492,6 +515,7 @@ class ProfessorSendMessageToEscola(Resource):
         return "success"
 
 class ProfessorSendMessageToPais(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -534,6 +558,7 @@ class ProfessorSendMessageToPais(Resource):
 
 
 class AlunosSendMessageToProfessores(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -570,6 +595,7 @@ class AlunosSendMessageToProfessores(Resource):
         return "success"
 
 class AlunosSendMessageToEscola(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -605,6 +631,7 @@ class AlunosSendMessageToEscola(Resource):
         return "success"
 
 class PaisSendMessageToProfessores(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -639,6 +666,7 @@ class PaisSendMessageToProfessores(Resource):
 
 
 class PaisSendMessageToEscola(Resource):
+    @jwt_required()
     def post(self, remetenteNome, destinatarioId, remetenteId, destinatarioQueueId, message):
         # SELECT queue aluno from DB
         conn = db_connect.connect()
@@ -672,6 +700,7 @@ class PaisSendMessageToEscola(Resource):
         return "success"
 
 class AlunosGetMessages(Resource):
+    @jwt_required()
     def get(self, alunoId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaAlunos where AlunoId = %d" % int(alunoId))
@@ -681,6 +710,7 @@ class AlunosGetMessages(Resource):
         return result
 
 class EscolaGetMessages(Resource):
+    @jwt_required()
     def get(self, schoolId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaEscola where SchoolId = %d" % int(schoolId))
@@ -690,6 +720,7 @@ class EscolaGetMessages(Resource):
         return result
 
 class ProfessoresGetMessages(Resource):
+    @jwt_required()
     def get(self, professoresId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaProfessores where ProfessoresId = %d" % int(professoresId))
@@ -699,6 +730,7 @@ class ProfessoresGetMessages(Resource):
         return result
 
 class PaisGetMessages(Resource):
+    @jwt_required()
     def get(self, paisId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaPais where PaisId = %d" % int(paisId))
@@ -708,6 +740,7 @@ class PaisGetMessages(Resource):
         return result
 
 class AlunosGetSendMessages(Resource):
+    @jwt_required()
     def get(self, alunoId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaProfessores where AlunoId = %d" % int(alunoId))
@@ -717,6 +750,7 @@ class AlunosGetSendMessages(Resource):
         return result
 
 class AlunosGetSendMessagesEscola(Resource):
+    @jwt_required()
     def get(self, alunoId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaEscola where AlunoId = %d" % int(alunoId))
@@ -726,6 +760,7 @@ class AlunosGetSendMessagesEscola(Resource):
         return result
 
 class ProfessoresGetSendMessagesAlunos(Resource):
+    @jwt_required()
     def get(self, professoresId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaAlunos where ProfessoresId = %d" % int(professoresId))
@@ -735,6 +770,7 @@ class ProfessoresGetSendMessagesAlunos(Resource):
         return result
 
 class ProfessoresGetSendMessagesPais(Resource):
+    @jwt_required()
     def get(self, professoresId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaPais where ProfessoresId = %d" % int(professoresId))
@@ -744,6 +780,7 @@ class ProfessoresGetSendMessagesPais(Resource):
         return result
 
 class ProfessoresGetSendMessagesEscola(Resource):
+    @jwt_required()
     def get(self, professoresId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaEscola where ProfessoresId = %d" % int(professoresId))
@@ -753,6 +790,7 @@ class ProfessoresGetSendMessagesEscola(Resource):
         return result
 
 class PaisGetSendMessagesEscola(Resource):
+    @jwt_required()
     def get(self, paisId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaEscola where PaisId = %d" % int(paisId))
@@ -762,6 +800,7 @@ class PaisGetSendMessagesEscola(Resource):
         return result
 
 class PaisGetSendMessagesProfessores(Resource):
+    @jwt_required()
     def get(self, paisId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaProfessores where PaisId = %d" % int(paisId))
@@ -771,6 +810,7 @@ class PaisGetSendMessagesProfessores(Resource):
         return result
 
 class EscolaGetSendMessagesProfessores(Resource):
+    @jwt_required()
     def get(self, schoolId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaProfessores where SchoolId = %d" % int(schoolId))
@@ -781,6 +821,7 @@ class EscolaGetSendMessagesProfessores(Resource):
 
 
 class EscolaGetSendMessagesAlunos(Resource):
+    @jwt_required()
     def get(self, schoolId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaAlunos where SchoolId = %d" % int(schoolId))
@@ -790,6 +831,7 @@ class EscolaGetSendMessagesAlunos(Resource):
         return result
 
 class EscolaGetSendMessagesPais(Resource):
+    @jwt_required()
     def get(self, schoolId):
         conn = db_connect.connect()
         query = conn.execute("select * from CaixaEntradaPais where SchoolId = %d" % int(schoolId))
