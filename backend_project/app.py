@@ -181,7 +181,7 @@ class ParentsLogin(Resource):
                 access = create_access_token(identity=pais['PaisId'])
 
                 return jsonify({
-                    'aluno': pais,
+                    'pais': pais,
                     'access': access,
                     'refresh': refresh
                 })
