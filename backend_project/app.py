@@ -5,7 +5,7 @@ from flask_restful import Resource, Api
 from sqlalchemy import create_engine
 import pika
 from json import dumps
-from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, JWTManager
+from flask_jwt_extended import jwt_required, create_access_token, create_refresh_token, JWTManager, get_jwt_identity
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -840,6 +840,18 @@ class EscolaGetSendMessagesPais(Resource):
 
         return result
 
+class RefreshToken(Resource):
+    @jwt_required(refresh=True)
+    def post(self):
+        identity = get_jwt_identity()
+        access = create_access_token(identity=identity)
+
+        return jsonify({
+            'access': access
+        })
+
+# Refresh Token
+api.add_resource(RefreshToken, '/token/refresh')
 # LOGIN/LOGOUT
 api.add_resource(StudentLogin, '/login/students/<user>/<password>')
 api.add_resource(ParentsLogin, '/login/parents/<user>/<password>')
