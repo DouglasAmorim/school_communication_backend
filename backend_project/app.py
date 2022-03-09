@@ -5,7 +5,8 @@ from flask_restful import Resource, Api
 from sqlalchemy import create_engine
 import pika
 from json import dumps
-
+from flask_jwt_extended import create_access_token, create_refresh_token
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db_connect = create_engine('sqlite:///db_scholl_app.sqlite')
 app = Flask(__name__)
@@ -116,57 +117,38 @@ class QueuePais(Resource):
 class StudentLogin(Resource):
     def post(self, user, password):
         aluno = OperatorDb.getAlunoByUsername(user)
-        print(aluno)
+
         if aluno != None:
-            if password == aluno['Senha']:
-                print('Senha correta')
+            isPassCorrect = check_password_hash(aluno['Senha'], password)
+            if isPassCorrect:
+                #refresh = create_refresh_token(identity= aluno['AlunosId'])
+                #create_access_token(identity= aluno['AlunosId'])
+
                 return aluno
 
 class SchoolLogin(Resource):
     def post(self, user, password):
         escola = OperatorDb.getEscolaByUsername(user)
         if escola != None:
-            if password == escola['Senha']:
-                print('Senha correta')
+            isPassCorrect = check_password_hash(escola['Senha'], password)
+            if isPassCorrect:
                 return escola
 
 class TeacherLogin(Resource):
     def post(self, user, password):
         professor = OperatorDb.getProfessorByUsername(user)
-        print(professor)
         if professor != None:
-            if password == professor['Senha']:
+            isPassCorrect = check_password_hash(professor['Senha'], password)
+            if isPassCorrect:
                 return professor
 
 class ParentsLogin(Resource):
     def post(self, user, password):
         pais = OperatorDb.getPaisByUsername(user)
 
-        print(pais)
-
         if pais != None:
-            if password == pais['Senha']:
-                return pais
-
-class Login(Resource):
-    def post(self, user, password):
-        aluno = OperatorDb.getAlunoByName(user)
-        professor = OperatorDb.getProfessorByName(user)
-        pais = OperatorDb.getPaisByName(user)
-
-        print(aluno)
-        print(professor)
-        print(pais)
-
-        if aluno != None:
-            if password == aluno['Senha']:
-                print('Senha correta')
-                return aluno
-        elif professor != None:
-            if password == professor['Senha']:
-                return professor
-        elif pais != None:
-            if password == pais['Senha']:
+            isPassCorrect = check_password_hash(pais['Senha'], password)
+            if isPassCorrect:
                 return pais
 
 class Logout(Resource):
